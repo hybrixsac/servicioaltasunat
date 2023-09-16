@@ -6,119 +6,125 @@ app.set("port", 9101);
 app.use(express.json())
 
 const browserP = puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],headless: true
-  });
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],headless: true
+});
   
-  app.post("/sunat", (req, res) => {
-    let page;
-    let body_filtros = req.body;
-    console.log(body_filtros);
-    (async () => {
-      page = await (await browserP).newPage();
-        await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
-          //await page.goto('https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp');
-          await page.goto('https://api-seguridad.sunat.gob.pe/v1/clientessol/4f3b88b3-d9d6-402a-b85d-6a0bc857746a/oauth2/loginMenuSol?originalUrl=https://e-menu.sunat.gob.pe/cl-ti-itmenu/AutenticaMenuInternet.htm&state=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABAAAAADdAAEZXhlY3B0AAZwYXJhbXN0AEsqJiomL2NsLXRpLWl0bWVudS9NZW51SW50ZXJuZXQuaHRtJmI2NGQyNmE4YjVhZjA5MTkyM2IyM2I2NDA3YTFjMWRiNDFlNzMzYTZ0AANleGVweA==');
-          await page.waitForSelector("#btnAceptar");  
-          await page.type("#txtRuc",body_filtros.documento);
-          await page.type("#txtUsuario",body_filtros.txtUsuario);
-          await page.type("#txtContrasena",body_filtros.txtContrasena);
-          await page.click("#btnAceptar");
-          await page.waitForTimeout(5000); 
-          //console.log(page);
-          try{
-            let salida = await page.evaluate(() => {
-              var elemento = document.querySelectorAll('.dropdown-header'); 
-              return elemento[5].innerHTML || "";
-            });
-            
-            let respuesta;
-            console.log(salida);
-            if((salida || "") =="".concat("<strong>RUC: ",body_filtros.documento,"</strong>")){
-              respuesta="exito";
-              await page.waitForSelector("#nivel4_11_9_6_1_1");
-              let altas = await page.evaluate(() => {
-                var elemento = document.querySelectorAll('#nivel4_11_9_6_1_1'); 
-                return elemento[0].innerHTML || "";
-              });
-              //console.log(page) 
-              await page.waitForTimeout(3000)
-              console.log(altas) 
-              //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
-              //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
-              //console.log(sizeLinks)
-              //await  altas.click();
-              await page.evaluate(()=>document.querySelector('#nivel4_11_9_6_1_1').click())
-              /*await page.waitForSelector(".spanNivelDescripcion");  
-              await page.waitForTimeout(3000)
-              await page.click(".spanNivelDescripcion"); */
-              await page.waitForSelector("#iframeApplication"); 
-              const sizeLinks = await page.$('#iframeApplication');
-              console.log(sizeLinks[0])/*
-              await page.waitForSelector(".error"); 
-              const sizeLink = await page.$('.error');
-              console.log(sizeLink)*/
-              await page.waitForTimeout(3000)
-              /*let embed = await page.evaluate(() => {
-                var elemento = document.querySelectorAll('#iframeApplication'); 
-                return elemento.innerHTML || "";
-              });
-
-              console.log("embed".concat(embed))*/
-
-              /*await page.waitForSelector("#nivel4_11_9_6_1_1");   
-              await page.waitForSelector(".spanNivelDescripcion");  
-              await page.waitForTimeout(5000)
-              await page.click("#nivel4_11_9_6_1_1");  */
-              //await page.waitForSelector("#nivel4_11_9_6_1_1");  
-              //const sizeLinks = await page.$$('#nivel4_11_9_6_1_1');
-              //await page.waitForTimeout(3000)
-              //await page.click("#nivel4_11_9_6_1_1");  
-              /*console.log(sizeLinks[0])
-              let sizeLink = sizeLinks[0];
-              //console.log( 'Clicking on: ', await page.evaluate( el => el.ht, sizeLink ) ); 
-              await sizeLink.click() ;*/
-
-            }else{
-              respuesta="error";
-            }; 
-            res.send(respuesta);
-          }catch (err){
-            console.log(err);
-            res.send("error");
-          }
-
-      })()
-          .catch(err => res.sendStatus(500))
-          .finally(async () => await page.close())
-        ;
-  });
-
-  app.post("/sunarp", (req, res) => {
-    let page;
-    let body_filtros = req.body;
-    console.log(body_filtros);
-    (async () => {
-      page = await (await browserP).newPage();
-      await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
-        await page.goto('https://www.sunarp.gob.pe/seccion/servicios/detalles/0/c3.html');
-        await page.click(".jcrm-botondetalle a");
-        await page.waitForSelector("#MainContent_btnSearch");  
-        await page.waitForTimeout(3000);
-        await page.waitForSelector("#g-recaptcha-response");  
-        await page.type("#MainContent_txtNoPlaca",body_filtros.documento);
-        const captha = body_filtros.captcha;
-        await page.evaluate(`document.getElementById("g-recaptcha-response").innerHTML="${captha}";`);
-        await page.click("#MainContent_btnSearch");
-        await page.waitForTimeout(3000);
-        let response = await page.screenshot({ encoding: "base64", fullPage: true });
-        let salida ={base64:response};
-        res.send(salida);
+app.post("/sunat", (req, res) => {
+  let page;
+  let body_filtros = req.body;
+  console.log(body_filtros);
+  (async () => {
+    page = await (await browserP).newPage();
+    await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+    await page.goto('https://api-seguridad.sunat.gob.pe/v1/clientessol/4f3b88b3-d9d6-402a-b85d-6a0bc857746a/oauth2/loginMenuSol?originalUrl=https://e-menu.sunat.gob.pe/cl-ti-itmenu/AutenticaMenuInternet.htm&state=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH2sHDFmDRAwACRgAKbG9hZEZhY3RvckkACXRocmVzaG9sZHhwP0AAAAAAAAx3CAAAABAAAAADdAAEZXhlY3B0AAZwYXJhbXN0AEsqJiomL2NsLXRpLWl0bWVudS9NZW51SW50ZXJuZXQuaHRtJmI2NGQyNmE4YjVhZjA5MTkyM2IyM2I2NDA3YTFjMWRiNDFlNzMzYTZ0AANleGVweA==');
+    await page.waitForSelector("#btnAceptar");  
+    await page.type("#txtRuc",body_filtros.documento);
+    await page.type("#txtUsuario",body_filtros.txtUsuario);
+    await page.type("#txtContrasena",body_filtros.txtContrasena);
+    await page.click("#btnAceptar");
+    await page.waitForTimeout(5000); 
+    //console.log(page);
+    try{
+      let salida = await page.evaluate(() => {
+        var elemento = document.querySelectorAll('.dropdown-header'); 
+        return elemento[5].innerHTML || "";
+      });
       
-          })()
-          .catch(err => res.sendStatus(500))
-          .finally(async () => await page.close())
-        ;
-  });
+      let respuesta;
+      console.log(salida);
+      //if((salida || "") =="".concat("<strong>RUC: ",body_filtros.documento,"</strong>")){
+        respuesta="exito";
+        await page.waitForSelector("#nivel4_11_9_6_1_1");
+        let altas = await page.evaluate(() => {
+          var elemento = document.querySelectorAll('#nivel4_11_9_6_1_1'); 
+          return elemento[0].innerHTML || "";
+        });
+        //console.log(page) 
+        await page.waitForTimeout(3000)
+        console.log(altas) 
+        //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
+        //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
+        //console.log(sizeLinks)
+        //await  altas.click();
+        await page.evaluate(()=>document.querySelector('#nivel4_11_9_6_1_1').click())
+        /*await page.waitForSelector(".spanNivelDescripcion");  
+        await page.waitForTimeout(3000)
+        await page.click(".spanNivelDescripcion"); */
+        await page.waitForTimeout(3000)
+        await page.waitForSelector("#iframeApplication"); 
+        page = await (await browserP).newPage();
+        await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+        await page.goto('https://e-menu.sunat.gob.pe/cl-ti-itmenu/MenuInternet.htm?action=execute&code=11.9.6.1.1&s=ww1');
+        await page.waitForTimeout(3000)
+        await page.waitForSelector(".error");
+        let error = await page.evaluate(() => {
+          var elemento = document.querySelectorAll('.error'); 
+          return elemento[0].innerHTML || "";
+        });
+        console.log(error) 
+        await page.waitForSelector("#btnNuevoCert_label");
+        await page.evaluate(()=>document.querySelector('#btnNuevoCert_label').click())
+        await page.waitForTimeout(3000)
+        await page.waitForSelector("#txt_ruc");
+        await page.type("#txt_ruc",body_filtros.txt_ruc);
+        await page.waitForSelector("#btnListarPSE2_label");
+        await page.evaluate(()=>document.querySelector('#btnListarPSE2_label').click())
+        await page.waitForSelector("#txtFechaIni");
+        await page.type("#txtFechaIni",body_filtros.txtFechaIni);
+        await page.waitForSelector("#txtFechaIni");
+        await page.waitForTimeout(3000)
+        let txtFechaIni = await page.evaluate(() => {
+          var elemento = document.querySelectorAll('#txtFechaIni'); 
+          return elemento[0].innerHTML || "txtFechaIni";
+        });
+        console.log(txtFechaIni) 
+        await page.waitForTimeout(3000)
+        await page.click("#btnNuevoCert1_label");
+        //await page.evaluate(()=>document.querySelector('#btnNuevoCert1_label').click())
+      /*}else{
+        respuesta="error";
+      }; */
+      
+      let response = await page.screenshot({ encoding: "base64", fullPage: true });
+      salida ={base64:response};
+      res.send(salida);
+    }catch (err){
+      console.log(err);
+      res.send("error");
+    };
+  })()
+      .catch(err => res.sendStatus(500))
+      .finally(async () => await page.close())
+    ;
+    
+});
+
+app.post("/sunarp", (req, res) => {
+  let page;
+  let body_filtros = req.body;
+  console.log(body_filtros);
+  (async () => {
+    page = await (await browserP).newPage();
+    await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
+      await page.goto('https://www.sunarp.gob.pe/seccion/servicios/detalles/0/c3.html');
+      await page.click(".jcrm-botondetalle a");
+      await page.waitForSelector("#MainContent_btnSearch");  
+      await page.waitForTimeout(3000);
+      await page.waitForSelector("#g-recaptcha-response");  
+      await page.type("#MainContent_txtNoPlaca",body_filtros.documento);
+      const captha = body_filtros.captcha;
+      await page.evaluate(`document.getElementById("g-recaptcha-response").innerHTML="${captha}";`);
+      await page.click("#MainContent_btnSearch");
+      await page.waitForTimeout(3000);
+      let response = await page.screenshot({ encoding: "base64", fullPage: true });
+      let salida ={base64:response};
+      res.send(salida);
+    
+        })()
+        .catch(err => res.sendStatus(500))
+        .finally(async () => await page.close())
+      ;
+});
   
   
 app.post("/minsa", (req, res) => {
@@ -179,7 +185,8 @@ app.post("/minsa", (req, res) => {
 app.post("/", (req, res) => {
   res.send("tu documento es : "+req.body.documento);
 });
-    
-app.listen(app.get("port"), () => 
-  console.log("app running on port", app.get("port"))
-);
+
+app.listen(app.get("port"), function (err) {
+  if (err) console.log(err);
+  console.log("Server listening on PORT", app.get("port"));
+});
