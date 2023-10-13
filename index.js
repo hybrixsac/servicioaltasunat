@@ -22,36 +22,25 @@ app.post("/sunat", (req, res) => {
     await page.type("#txtUsuario",body_filtros.txtUsuario);
     await page.type("#txtContrasena",body_filtros.txtContrasena);
     await page.click("#btnAceptar");
-    await page.waitForTimeout(5000); 
+    await page.waitForTimeout(3000); 
     //console.log(page);
+    let api="";
+    let msg="";
     try{
-      let salida = await page.evaluate(() => {
-        var elemento = document.querySelectorAll('.dropdown-header'); 
-        return elemento[5].innerHTML || "";
-      });
-      
-      let respuesta;
-      console.log(salida);
-      //if((salida || "") =="".concat("<strong>RUC: ",body_filtros.documento,"</strong>")){
-        respuesta="exito";
-        await page.waitForSelector("#nivel4_11_9_6_1_1");
-        let altas = await page.evaluate(() => {
-          var elemento = document.querySelectorAll('#nivel4_11_9_6_1_1'); 
-          return elemento[0].innerHTML || "";
+      let salida;
+      try{
+        salida = await page.evaluate(async () => {
+          var elemento = document.querySelectorAll('.dropdown-header'); 
+          return elemento[5].innerHTML || "";
         });
-        //console.log(page) 
-        await page.waitForTimeout(3000)
-        console.log(altas) 
-        //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
-        //const sizeLinks = await page.$('#nivel4_11_9_6_1_1');
-        //console.log(sizeLinks)
-        //await  altas.click();
-        await page.evaluate(()=>document.querySelector('#nivel4_11_9_6_1_1').click())
-        /*await page.waitForSelector(".spanNivelDescripcion");  
-        await page.waitForTimeout(3000)
-        await page.click(".spanNivelDescripcion"); */
-        await page.waitForTimeout(3000)
-        await page.waitForSelector("#iframeApplication"); 
+      }catch (err){
+        api="500";
+        msg="Error en Login"
+        salida ={api:api,msg:msg};
+        res.send(salida);
+      };
+      if(api==""){
+        console.log(salida);
         page = await (await browserP).newPage();
         await page.setUserAgent('5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36');
         await page.goto('https://e-menu.sunat.gob.pe/cl-ti-itmenu/MenuInternet.htm?action=execute&code=11.9.6.1.1&s=ww1');
@@ -62,32 +51,38 @@ app.post("/sunat", (req, res) => {
           return elemento[0].innerHTML || "";
         });
         console.log(error) 
-        await page.waitForSelector("#btnNuevoCert_label");
-        await page.evaluate(()=>document.querySelector('#btnNuevoCert_label').click())
-        await page.waitForTimeout(3000)
-        await page.waitForSelector("#txt_ruc");
-        await page.type("#txt_ruc",body_filtros.txt_ruc);
-        await page.waitForSelector("#btnListarPSE2_label");
-        await page.evaluate(()=>document.querySelector('#btnListarPSE2_label').click())
-        await page.waitForSelector("#txtFechaIni");
-        await page.type("#txtFechaIni",body_filtros.txtFechaIni);
-        await page.waitForSelector("#txtFechaIni");
-        await page.waitForTimeout(3000)
-        let txtFechaIni = await page.evaluate(() => {
-          var elemento = document.querySelectorAll('#txtFechaIni'); 
-          return elemento[0].innerHTML || "txtFechaIni";
-        });
-        console.log(txtFechaIni) 
-        await page.waitForTimeout(3000)
-        await page.click("#btnNuevoCert1_label");
-        //await page.evaluate(()=>document.querySelector('#btnNuevoCert1_label').click())
-      /*}else{
-        respuesta="error";
-      }; */
-      
-      let response = await page.screenshot({ encoding: "base64", fullPage: true });
-      salida ={base64:response};
-      res.send(salida);
+        if(error=="Usted no está habilitado para emitir comprobantes de pago. Para mayor información comuníquese con nuestra Central de Consultas."){
+          api="500";
+          msg=error
+          salida ={api:api,msg:msg};
+          res.send(salida);
+        }else{
+          await page.waitForSelector("#btnNuevoCert_label");
+          await page.evaluate(()=>document.querySelector('#btnNuevoCert_label').click())
+          await page.waitForTimeout(3000)
+          await page.waitForSelector("#txt_ruc");
+          await page.type("#txt_ruc",body_filtros.rucDigiflow);
+          await page.waitForSelector("#btnListarPSE2_label");
+          await page.evaluate(()=>document.querySelector('#btnListarPSE2_label').click())
+          await page.waitForSelector("#txtFechaIni");
+          await page.type("#txtFechaIni",body_filtros.txtFechaIni);
+          await page.waitForSelector("#txtFechaIni");
+          await page.waitForTimeout(3000)
+          let txtFechaIni = await page.evaluate(() => {
+            var elemento = document.querySelectorAll('#txtFechaIni'); 
+            return elemento[0].innerHTML || "txtFechaIni";
+          });
+          console.log(txtFechaIni) 
+          await page.waitForTimeout(3000)
+          await page.click("#btnNuevoCert1_label");
+          let response = await page.screenshot({ encoding: "base64", fullPage: true });
+          console.log(response);
+          api="200";
+          msg="Alta SUNAT se realizo correctamente"
+          salida ={api:api,msg:msg};
+          res.send(salida);
+        }
+      }
     }catch (err){
       console.log(err);
       res.send("error");
